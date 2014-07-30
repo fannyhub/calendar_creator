@@ -1,0 +1,119 @@
+Option Explicit
+Sub daily()
+Dim mdate As Date, mdic, template, att_ita, att_aus, time_ita, time_aus, mmonth, first_day As Date, myear, holidays As Range
+On Error GoTo err1:
+mdate = CDate(InputBox("write a date here in dd/mm/yyyy format", , Fix(Date))) 'choosing a date, the today date is a default
+
+mmonth = Month(mdate)
+myear = Year(mdate)
+' CREATING FINAL_ARRAY (FINAL DATES)
+
+Set mdic = CreateObject("scripting.dictionary") 'a dictionary month-number:months_days
+With mdic
+.Add 1, 31
+.Add 2, 28
+.Add 3, 31
+.Add 4, 30
+.Add 5, 31
+.Add 6, 30
+.Add 7, 31
+.Add 8, 31
+.Add 9, 30
+.Add 10, 31
+.Add 11, 30
+.Add 12, 31
+
+End With
+
+'holiday form - up to 6 days
+
+Set att_ita = ThisWorkbook.Worksheets("Accuracy_Italy").Cells
+Set att_aus = ThisWorkbook.Worksheets("Accuracy_Austria").Cells
+Set time_ita = ThisWorkbook.Worksheets("Timeliness_Italy").Cells
+Set time_aus = ThisWorkbook.Worksheets("Timeliness_Austria").Cells
+Set holidays = ThisWorkbook.Worksheets("Holidays").Cells
+
+
+
+Dim fdate As String
+
+
+
+first_day = CDate("1 " + Str(mmonth) + " " + Str(myear))
+
+Dim a As Integer, sla_arr, o As Date, b As Integer
+ReDim sla_arr(0)
+
+
+
+a = 1
+b = 0
+
+While a <= mdic(mmonth)
+o = CDate(Str(a) + Str(mmonth) + Str(myear))
+If Weekday(o) <> 1 And Weekday(o) <> 7 Then
+'
+ReDim Preserve sla_arr(b)
+sla_arr(b) = o
+
+b = b + 1
+
+End If
+
+a = a + 1
+Wend
+
+'holidays
+Dim holiday_arr, final_array
+ReDim final_array(0)
+a = 0
+Dim f
+f = 0
+Dim test As Boolean
+
+While a <= UBound(sla_arr)
+b = 1
+test = False
+
+While holidays(b, 1) <> ""
+
+If holidays(b, 1) = sla_arr(a) Then
+test = True
+
+End If
+b = b + 1
+Wend
+If test = False Then
+ReDim Preserve final_array(f)
+final_array(f) = sla_arr(a)
+
+f = f + 1
+End If
+a = a + 1
+Wend
+
+
+
+For a = LBound(final_array) To UBound(final_array)
+
+att_ita(2, 9 + a).Value = final_array(a)
+
+
+att_aus(2, 9 + a) = final_array(a)
+
+
+time_ita(2, 9 + a) = final_array(a)
+
+time_aus(2, 9 + a) = final_array(a)
+Next a
+
+For a = UBound(final_array) + 10 To 31
+time_ita(2, a) = ""
+att_ita(2, a) = ""
+time_aus(2, a) = ""
+att_aus(2, a) = ""
+Next a
+
+Retval = final_array 'final array put to global variable
+err1:
+End Sub
